@@ -40,18 +40,13 @@ class ProductController extends AbstractApiController
         $product = $entityManager->getRepository(Product::class)->find($id);
 
         if (!$product) {
-            return $this->json([
-                'message' => 'Product not exist',
-            ], Response::HTTP_BAD_REQUEST);
+            return $this->respond(['title' => 'Product not exist'], Response::HTTP_NOT_FOUND);
         }
-
-        $formData = json_decode($request->getContent(), true);
 
         $form = $this->createForm(ProductType::class, $product);
         $form->handleRequest($request);
-        $form->submit($formData, false);
 
-        if ($form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
             return $this->respond($product, Response::HTTP_OK, ['product']);
