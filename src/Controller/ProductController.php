@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Product;
 use App\Form\ProductType;
+use App\Service\CacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,7 +36,7 @@ class ProductController extends AbstractApiController
     /**
      * @Route("/products/{id}", name="edit_product", methods={"PATCH", "PUT"})
      */
-    public function editProduct($id, Request $request, EntityManagerInterface $entityManager): Response
+    public function editProduct($id, Request $request, EntityManagerInterface $entityManager, CacheService $cacheService): Response
     {
         $product = $entityManager->getRepository(Product::class)->find($id);
 
@@ -49,6 +50,8 @@ class ProductController extends AbstractApiController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
+            $cacheService->removeCacheEntityById($product->getId());
+
             return $this->respond($product, Response::HTTP_OK, ['product']);
         }
 
@@ -58,9 +61,9 @@ class ProductController extends AbstractApiController
     /**
      * @Route("/products/{id}", name="get_product", methods={"GET"})
      */
-    public function getProduct($id, EntityManagerInterface $entityManager): Response
+    public function getProduct($id, CacheService $cacheService): Response
     {
-        $product = $entityManager->getRepository(Product::class)->find($id);
+        $product = $cacheService->cacheEntityById($id,Product::class);
 
         if ($product) {
             return $this->respond($product, Response::HTTP_OK, ['product']);
@@ -72,11 +75,13 @@ class ProductController extends AbstractApiController
     /**
      * @Route("/products/{id}", name="delete_product", methods={"DELETE"})
      */
-    public function deleteProduct($id, EntityManagerInterface $entityManager): Response
+    public function deleteProduct($id, EntityManagerInterface $entityManager, CacheService $cacheService): Response
     {
         $product = $entityManager->getRepository(Product::class)->find($id);
 
         if ($product) {
+            $cacheService->removeCacheEntityById($product->getId());
+
             $entityManager->remove($product);
             $entityManager->flush();
             return $this->respond(null,Response::HTTP_NO_CONTENT);
