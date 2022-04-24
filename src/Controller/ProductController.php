@@ -7,6 +7,7 @@ use App\Form\ProductType;
 use App\Service\CacheService;
 use App\Util\PaginationTrait;
 use Doctrine\ORM\EntityManagerInterface;
+use FOS\ElasticaBundle\Manager\RepositoryManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -96,20 +97,22 @@ class ProductController extends AbstractApiController
     /**
      * @Route("/products", name="get_products", methods={"GET"})
      */
-    public function getProducts(Request $request, EntityManagerInterface $entityManager): Response
+    public function getProducts(Request $request, RepositoryManagerInterface $repositoryManager): Response
     {
         $page = $this->getPage($request->get('page', 1));
-        $limitPerPage = $this->getLimitPerPage($request->get('limitPerPage', 30));
-        $offset = $this->getOffset($page, $limitPerPage);
+        $limitPerPage = $this->getLimitPerPage($request->get('limitPerPage', 5));
+        $search = $request->get('search');
 
-        $products = $entityManager->getRepository(Product::class)->getProductsForApiListing($limitPerPage, $offset);
-        $totalProductCount = $entityManager->getRepository(Product::class)->getCountOfProducts();
+        $repository = $repositoryManager->getRepository(Product::class);
+        $usersRepository = $repository->findPaginated($search)
+            ->setCurrentPage($page)
+            ->setMaxPerPage($limitPerPage);
 
         return $this->respond([
+            'totalCount' => $usersRepository->count(),
             'page' => $page,
             'limitPerPage' => $limitPerPage,
-            'items' => $products,
-            'totalCount' => $totalProductCount
+            'items' => $usersRepository->getCurrentPageResults()
         ], Response::HTTP_OK, ['product']);
     }
 }
