@@ -32,7 +32,7 @@ class Product
     private $description;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Category::class, inversedBy="products")
+     * @ORM\ManyToOne(targetEntity=Category::class, inversedBy="products", fetch="EAGER")
      * @ORM\JoinColumn(nullable=false)
      * @Groups({"product"})
      */
