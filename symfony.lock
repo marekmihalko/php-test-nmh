@@ -131,6 +131,18 @@
     "psr/log": {
         "version": "1.1.4"
     },
+    "snc/redis-bundle": {
+        "version": "4.1",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "2.0",
+            "ref": "36b3d9ab65be62de4e085a25e6ca899efa96b1f3"
+        },
+        "files": [
+            "./config/packages/snc_redis.yaml"
+        ]
+    },
     "symfony/cache": {
         "version": "v5.4.7"
     },
