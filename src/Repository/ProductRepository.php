@@ -47,6 +47,23 @@ class ProductRepository extends ServiceEntityRepository
         }
     }
 
+    public function getCountOfProducts()
+    {
+        return $this->createQueryBuilder('p')
+            ->select('COUNT(p)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function getProductsForApiListing($limitPerPage, $offset)
+    {
+        return $this->createQueryBuilder('p')
+            ->setMaxResults($limitPerPage)
+            ->setFirstResult($offset)
+            ->getQuery()
+            ->getResult();
+    }
+
     // /**
     //  * @return Product[] Returns an array of Product objects
     //  */

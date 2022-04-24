@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Product;
 use App\Form\ProductType;
 use App\Service\CacheService;
+use App\Util\PaginationTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,6 +13,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ProductController extends AbstractApiController
 {
+    use PaginationTrait;
+
     /**
      * @Route("/products", name="create_product", methods={"POST"})
      */
@@ -63,7 +66,7 @@ class ProductController extends AbstractApiController
      */
     public function getProduct($id, CacheService $cacheService): Response
     {
-        $product = $cacheService->cacheEntityById($id,Product::class);
+        $product = $cacheService->cacheEntityById($id, Product::class);
 
         if ($product) {
             return $this->respond($product, Response::HTTP_OK, ['product']);
@@ -84,9 +87,29 @@ class ProductController extends AbstractApiController
 
             $entityManager->remove($product);
             $entityManager->flush();
-            return $this->respond(null,Response::HTTP_NO_CONTENT);
+            return $this->respond(null, Response::HTTP_NO_CONTENT);
         }
 
         return $this->respond(['title' => 'Product not exist'], Response::HTTP_NOT_FOUND);
+    }
+
+    /**
+     * @Route("/products", name="get_products", methods={"GET"})
+     */
+    public function getProducts(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $page = $this->getPage($request->get('page', 1));
+        $limitPerPage = $this->getLimitPerPage($request->get('limitPerPage', 30));
+        $offset = $this->getOffset($page, $limitPerPage);
+
+        $products = $entityManager->getRepository(Product::class)->getProductsForApiListing($limitPerPage, $offset);
+        $totalProductCount = $entityManager->getRepository(Product::class)->getCountOfProducts();
+
+        return $this->respond([
+            'page' => $page,
+            'limitPerPage' => $limitPerPage,
+            'items' => $products,
+            'totalCount' => $totalProductCount
+        ], Response::HTTP_OK, ['product']);
     }
 }
