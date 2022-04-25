@@ -1,9 +1,8 @@
 ## Technical Requirements
 - Install PHP 7.2.5 or higher and these PHP extensions (which are installed and enabled by default in most PHP 7 installations): Ctype, iconv, JSON, PCRE, Session, SimpleXML, and Tokenizer;
 - Install Composer, which is used to install PHP packages.
-- Install Node.js and NPM
 - Relation database (i use MySQL)
-- Install Docker
+- Install Docker (for Redis and Elasticsearch)
 
 ## Step-by-step guide
 - run `composer install` for installation php vendor
