@@ -7,7 +7,6 @@ use App\Form\ProductType;
 use App\Service\CacheService;
 use App\Util\PaginationTrait;
 use Doctrine\ORM\EntityManagerInterface;
-use FOS\ElasticaBundle\Manager\RepositoryManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -97,22 +96,14 @@ class ProductController extends AbstractApiController
     /**
      * @Route("/products", name="get_products", methods={"GET"})
      */
-    public function getProducts(Request $request, RepositoryManagerInterface $repositoryManager): Response
+    public function getProducts(Request $request, CacheService $cacheService): Response
     {
         $page = $this->getPage($request->get('page', 1));
         $limitPerPage = $this->getLimitPerPage($request->get('limitPerPage', 5));
         $search = $request->get('search');
 
-        $repository = $repositoryManager->getRepository(Product::class);
-        $usersRepository = $repository->findPaginated($search)
-            ->setCurrentPage($page)
-            ->setMaxPerPage($limitPerPage);
+        $products = $cacheService->getCachedListingData($search, $page, $limitPerPage, Product::class);
 
-        return $this->respond([
-            'totalCount' => $usersRepository->count(),
-            'page' => $page,
-            'limitPerPage' => $limitPerPage,
-            'items' => $usersRepository->getCurrentPageResults()
-        ], Response::HTTP_OK, ['product']);
+        return $this->respond($products, Response::HTTP_OK, ['product']);
     }
 }
